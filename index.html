@@ -1,94 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Task Progress Tracker</title>
-    
+
     <!-- PWA Meta Tags -->
-    <meta name="description" content="Advanced productivity app with Focus Mode, Dependencies, Time Blocking, and AI-powered insights">
+    <meta name="description"
+        content="Advanced productivity app with Focus Mode, Dependencies, Time Blocking, and AI-powered insights">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="TaskTracker">
-    
+
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
-    
+
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class'
         }
     </script>
+    <style>
+        /* Safe area insets for notched Android/iOS devices */
+        body {
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Prevent double-tap zoom on mobile */
+        button,
+        input,
+        select,
+        a {
+            touch-action: manipulation;
+        }
+
+        /* Smooth scrolling on mobile */
+        * {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Fix select dropdown on Android dark mode */
+        select option {
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+
+        .dark select option {
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+
+        /* Mobile-specific scrollbar hiding */
+        @media (max-width: 768px) {
+            ::-webkit-scrollbar {
+                display: none;
+            }
+
+            .max-w-7xl {
+                padding: 0 12px;
+            }
+        }
+
+        /* Tap highlight removal */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen p-6 transition-colors duration-300">
+
+<body
+    class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen p-6 transition-colors duration-300">
     <div class="max-w-7xl mx-auto">
         <!-- Header with Initials -->
         <div class="flex justify-between items-center mb-4">
             <div class="flex gap-3">
-                <button onclick="showFocusMode()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2 font-bold">
+                <button onclick="showFocusMode()"
+                    class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2 font-bold">
                     🎯 FOCUS MODE
                 </button>
-                <button onclick="showDependencyView()" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2">
+                <button onclick="showDependencyView()"
+                    class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2">
                     🔗 Dependencies
                 </button>
-                <button onclick="showTimeBoxing()" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2">
+                <button onclick="showTimeBoxing()"
+                    class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2">
                     ⏰ Time Block
                 </button>
             </div>
             <div class="flex items-center gap-3">
                 <!-- Dark Mode Toggle -->
-                <button onclick="toggleDarkMode()" id="dark-mode-toggle" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-full shadow-lg hover:shadow-xl transition">
-                    <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                <button onclick="toggleDarkMode()" id="dark-mode-toggle"
+                    class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-full shadow-lg hover:shadow-xl transition">
+                    <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
                     </svg>
-                    <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                        </path>
                     </svg>
                 </button>
-                
+
                 <!-- Feature Menu Button -->
-                <button onclick="toggleFeatureMenu()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition relative">
+                <button onclick="toggleFeatureMenu()"
+                    class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition relative">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">15</span>
+                    <span
+                        class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">15</span>
                 </button>
-                
-                <button onclick="showNotificationSettings()" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2">
+
+                <button onclick="showNotificationSettings()"
+                    class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                        </path>
                     </svg>
                     <span id="notification-status" class="text-sm font-medium">Notifications</span>
                 </button>
-                <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform" onclick="editInitials()" title="Click to edit initials">
-                    <span id="user-initials">N</span>
-                </div>
+                <!-- Spotify Button -->
+                <button onclick="toggleSpotifyModal()" title="Connect Spotify - Listen while you work"
+                    class="bg-[#1DB954] hover:bg-[#1ed760] text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center relative"
+                    id="spotify-btn">
+                    <!-- Spotify logo SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168" class="w-8 h-8">
+                        <path fill="#fff"
+                            d="M84 0C37.6 0 0 37.6 0 84s37.6 84 84 84 84-37.6 84-84S130.4 0 84 0zm38.5 121.2c-1.5 2.5-4.8 3.3-7.3 1.8-20-12.2-45.2-15-74.9-8.2-2.9.7-5.7-1.1-6.4-4-.7-2.9 1.1-5.7 4-6.4 32.5-7.4 60.4-4.2 82.9 9.5 2.5 1.5 3.3 4.8 1.8 7.3zm10.3-22.9c-1.9 3.1-5.9 4.1-9 2.2-22.9-14.1-57.8-18.2-84.9-9.9-3.5 1.1-7.2-.9-8.2-4.4-1.1-3.5.9-7.2 4.4-8.2 30.9-9.4 69.3-4.8 95.6 11.3 3.1 1.9 4.1 5.9 2.1 9zm.9-23.8c-27.5-16.3-72.9-17.8-99.1-9.8-4.2 1.3-8.6-1.1-9.9-5.2-1.3-4.2 1.1-8.6 5.2-9.9 30.2-9.1 80.3-7.4 112 11.4 3.8 2.2 5 7.1 2.8 10.8-2.2 3.8-7.1 5-10.9 2.8l-.1-.1z" />
+                    </svg>
+                    <span id="spotify-playing-dot"
+                        class="hidden absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
+                </button>
             </div>
         </div>
 
         <!-- Main Container -->
         <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 mb-6 transition-colors duration-300">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+
                 <!-- TO-DO LIST Section -->
                 <div>
                     <div class="flex items-center justify-between mb-6">
                         <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
                             TO-DO LIST
-                            <span id="view-indicator" class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2"></span>
+                            <span id="view-indicator"
+                                class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2"></span>
                         </h1>
-                        <button onclick="showAddTaskModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition">
+                        <button onclick="showAddTaskModal()"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition">
                             + Add Task
                         </button>
                     </div>
-                    
+
                     <div id="tasks-list" class="space-y-3">
                         <!-- Tasks will be rendered here -->
                     </div>
@@ -97,7 +176,7 @@
                 <!-- TASK PROGRESS Section -->
                 <div>
                     <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6">TASK PROGRESS</h2>
-                    
+
                     <!-- Progress Chart -->
                     <div class="mb-6 flex justify-center">
                         <div class="w-80 h-80">
@@ -106,7 +185,7 @@
                     </div>
 
                     <!-- Today's Date -->
-                    <div class="flex items-center justify-center gap-2 text-gray-600 mb-4">
+                    <div class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300 mb-4">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -118,9 +197,12 @@
 
                     <!-- View Toggle -->
                     <div class="flex justify-center gap-2 mb-4">
-                        <button onclick="setView('today')" id="btn-today" class="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium">Today</button>
-                        <button onclick="setView('week')" id="btn-week" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Week</button>
-                        <button onclick="setView('month')" id="btn-month" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Month</button>
+                        <button onclick="setView('today')" id="btn-today"
+                            class="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium">Today</button>
+                        <button onclick="setView('week')" id="btn-week"
+                            class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium">Week</button>
+                        <button onclick="setView('month')" id="btn-month"
+                            class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium">Month</button>
                     </div>
 
                     <!-- Stats -->
@@ -149,13 +231,15 @@
         <!-- Procrastination Heatmap -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-2xl font-bold text-gray-800">🔥 Procrastination Heatmap</h3>
-                <button onclick="analyzeProcrastination()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white">🔥 Procrastination Heatmap</h3>
+                <button onclick="analyzeProcrastination()"
+                    class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
                     Analyze My Patterns
                 </button>
             </div>
             <div id="procrastination-heatmap">
-                <p class="text-gray-500 text-center py-8">Click "Analyze My Patterns" to see which tasks you keep rescheduling</p>
+                <p class="text-gray-500 dark:text-gray-400 text-center py-8">Click "Analyze My Patterns" to see which
+                    tasks you keep rescheduling</p>
             </div>
         </div>
 
@@ -170,54 +254,62 @@
         <!-- AI Feedback Section -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-2xl font-bold text-gray-800">🤖 AI Productivity Insights</h3>
-                <button onclick="getAIFeedback()" id="ai-btn" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 font-medium transition">
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white">🤖 AI Productivity Insights</h3>
+                <button onclick="getAIFeedback()" id="ai-btn"
+                    class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 font-medium transition">
                     Get AI Feedback
                 </button>
             </div>
-            <div id="ai-feedback" class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg hidden"></div>
+            <div id="ai-feedback"
+                class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900 dark:to-purple-900 text-gray-800 dark:text-gray-100 p-6 rounded-lg hidden whitespace-pre-line">
+            </div>
         </div>
 
         <!-- Calendar View -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-bold text-gray-800">📅 Calendar View</h3>
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white">📅 Calendar View</h3>
                 <div class="flex gap-2 items-center">
-                    <button onclick="changeMonth(-1)" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <button onclick="changeMonth(-1)"
+                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                            </path>
                         </svg>
                     </button>
-                    <span id="calendar-month" class="text-xl font-semibold px-4"></span>
-                    <button onclick="changeMonth(1)" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <span id="calendar-month" class="text-xl font-semibold px-4 text-gray-800 dark:text-white"></span>
+                    <button onclick="changeMonth(1)"
+                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                            </path>
                         </svg>
                     </button>
-                    <button onclick="goToToday()" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                    <button onclick="goToToday()"
+                        class="ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
                         Today
                     </button>
                 </div>
             </div>
-            
+
             <!-- Calendar Grid -->
             <div class="grid grid-cols-7 gap-2">
                 <!-- Day headers -->
-                <div class="text-center font-bold text-gray-600 p-2">Sun</div>
-                <div class="text-center font-bold text-gray-600 p-2">Mon</div>
-                <div class="text-center font-bold text-gray-600 p-2">Tue</div>
-                <div class="text-center font-bold text-gray-600 p-2">Wed</div>
-                <div class="text-center font-bold text-gray-600 p-2">Thu</div>
-                <div class="text-center font-bold text-gray-600 p-2">Fri</div>
-                <div class="text-center font-bold text-gray-600 p-2">Sat</div>
-                
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Sun</div>
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Mon</div>
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Tue</div>
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Wed</div>
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Thu</div>
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Fri</div>
+                <div class="text-center font-bold text-gray-600 dark:text-gray-300 p-2">Sat</div>
+
                 <!-- Calendar days -->
                 <div id="calendar-days"></div>
             </div>
 
             <!-- Selected Date Info -->
-            <div id="selected-date-info" class="mt-6 p-4 bg-blue-50 rounded-lg hidden">
-                <h4 class="font-bold text-lg mb-3" id="selected-date-title"></h4>
+            <div id="selected-date-info" class="mt-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg hidden">
+                <h4 class="font-bold text-lg mb-3 text-gray-800 dark:text-white" id="selected-date-title"></h4>
                 <div id="selected-date-tasks" class="space-y-2"></div>
             </div>
         </div>
@@ -229,7 +321,8 @@
     </div>
 
     <!-- Feature Menu Modal -->
-    <div id="featureMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div id="featureMenuModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
             <!-- Header -->
             <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 flex justify-between items-center">
@@ -239,7 +332,8 @@
                 </div>
                 <button onclick="toggleFeatureMenu()" class="text-white hover:text-gray-200 transition">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
@@ -247,169 +341,221 @@
             <!-- Features Grid -->
             <div class="p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
+
                     <!-- Feature Card -->
-                    <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900 dark:to-red-900 p-5 rounded-xl border-2 border-orange-200 dark:border-orange-700 hover:shadow-lg transition cursor-pointer" onclick="showFocusMode(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900 dark:to-red-900 p-5 rounded-xl border-2 border-orange-200 dark:border-orange-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="showFocusMode(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🎯</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Focus Mode</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Work on ONE task with 25-min Pomodoro timer. Zero distractions!</p>
-                                <span class="inline-block bg-orange-500 text-white text-xs px-3 py-1 rounded-full">Click to Try</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Work on ONE task with 25-min
+                                    Pomodoro timer. Zero distractions!</p>
+                                <span class="inline-block bg-orange-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Try</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900 dark:to-cyan-900 p-5 rounded-xl border-2 border-blue-200 dark:border-blue-700 hover:shadow-lg transition cursor-pointer" onclick="showDependencyView(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900 dark:to-cyan-900 p-5 rounded-xl border-2 border-blue-200 dark:border-blue-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="showDependencyView(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🔗</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Task Dependencies</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Link tasks that depend on each other. Keeps your list logical!</p>
-                                <span class="inline-block bg-blue-500 text-white text-xs px-3 py-1 rounded-full">Click to Setup</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Link tasks that depend on each
+                                    other. Keeps your list logical!</p>
+                                <span class="inline-block bg-blue-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Setup</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 p-5 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:shadow-lg transition cursor-pointer" onclick="showTimeBoxing(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 p-5 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="showTimeBoxing(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">⏰</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Time Blocking</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Drag tasks onto your calendar. See if you actually have time!</p>
-                                <span class="inline-block bg-purple-500 text-white text-xs px-3 py-1 rounded-full">Click to Schedule</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Drag tasks onto your calendar.
+                                    See if you actually have time!</p>
+                                <span class="inline-block bg-purple-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Schedule</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900 dark:to-orange-900 p-5 rounded-xl border-2 border-red-200 dark:border-red-700 hover:shadow-lg transition cursor-pointer" onclick="analyzeProcrastination(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900 dark:to-orange-900 p-5 rounded-xl border-2 border-red-200 dark:border-red-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="analyzeProcrastination(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🔥</div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Procrastination Heatmap</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">AI analyzes tasks you keep rescheduling. Get personalized coaching!</p>
-                                <span class="inline-block bg-red-500 text-white text-xs px-3 py-1 rounded-full">Click to Analyze</span>
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Procrastination Heatmap
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">AI analyzes tasks you keep
+                                    rescheduling. Get personalized coaching!</p>
+                                <span class="inline-block bg-red-500 text-white text-xs px-3 py-1 rounded-full">Click to
+                                    Analyze</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900 dark:to-blue-900 p-5 rounded-xl border-2 border-indigo-200 dark:border-indigo-700 hover:shadow-lg transition cursor-pointer" onclick="showEODReview(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900 dark:to-blue-900 p-5 rounded-xl border-2 border-indigo-200 dark:border-indigo-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="showEODReview(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🌙</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">End-of-Day Review</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Auto-cleanup at 11 PM. Reschedule, archive, or delete incomplete tasks.</p>
-                                <span class="inline-block bg-indigo-500 text-white text-xs px-3 py-1 rounded-full">Click to Review</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Auto-cleanup at 11 PM.
+                                    Reschedule, archive, or delete incomplete tasks.</p>
+                                <span class="inline-block bg-indigo-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Review</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 p-5 rounded-xl border-2 border-green-200 dark:border-green-700 hover:shadow-lg transition cursor-pointer" onclick="showAddTaskModal(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 p-5 rounded-xl border-2 border-green-200 dark:border-green-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="showAddTaskModal(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">📁</div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Areas & Subsections</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Organize tasks by life areas (Work, Personal, etc.) with subsections.</p>
-                                <span class="inline-block bg-green-500 text-white text-xs px-3 py-1 rounded-full">Click to Create</span>
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Areas & Subsections
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Organize tasks by life areas
+                                    (Work, Personal, etc.) with subsections.</p>
+                                <span class="inline-block bg-green-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Create</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900 dark:to-amber-900 p-5 rounded-xl border-2 border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition">
+                    <div
+                        class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900 dark:to-amber-900 p-5 rounded-xl border-2 border-yellow-200 dark:border-yellow-700 hover:shadow-lg transition">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">📅</div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Interactive Calendar</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Click any date to filter tasks. See completion indicators on each day.</p>
-                                <span class="inline-block bg-yellow-600 text-white text-xs px-3 py-1 rounded-full">Scroll Down</span>
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Interactive Calendar
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Click any date to filter tasks.
+                                    See completion indicators on each day.</p>
+                                <span
+                                    class="inline-block bg-yellow-600 text-white text-xs px-3 py-1 rounded-full">Scroll
+                                    Down</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900 dark:to-rose-900 p-5 rounded-xl border-2 border-pink-200 dark:border-pink-700 hover:shadow-lg transition cursor-pointer" onclick="getAIFeedback(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900 dark:to-rose-900 p-5 rounded-xl border-2 border-pink-200 dark:border-pink-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="getAIFeedback(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🤖</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">AI Insights</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Get personalized productivity feedback and recommendations from AI.</p>
-                                <span class="inline-block bg-pink-500 text-white text-xs px-3 py-1 rounded-full">Click to Analyze</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Get personalized productivity
+                                    feedback and recommendations from AI.</p>
+                                <span class="inline-block bg-pink-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Analyze</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900 dark:to-teal-900 p-5 rounded-xl border-2 border-cyan-200 dark:border-cyan-700 hover:shadow-lg transition cursor-pointer" onclick="showNotificationSettings(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900 dark:to-teal-900 p-5 rounded-xl border-2 border-cyan-200 dark:border-cyan-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="showNotificationSettings(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🔔</div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Smart Notifications</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Set custom frequency (minutes/hours). Get reminders for pending tasks.</p>
-                                <span class="inline-block bg-cyan-500 text-white text-xs px-3 py-1 rounded-full">Click to Configure</span>
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Smart Notifications
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Set custom frequency
+                                    (minutes/hours). Get reminders for pending tasks.</p>
+                                <span class="inline-block bg-cyan-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Configure</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-900 dark:to-purple-900 p-5 rounded-xl border-2 border-violet-200 dark:border-violet-700 hover:shadow-lg transition">
+                    <div
+                        class="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-900 dark:to-purple-900 p-5 rounded-xl border-2 border-violet-200 dark:border-violet-700 hover:shadow-lg transition">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">📊</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Charts & Analytics</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Donut, Line, Pie, and Bar charts. Track completion trends over time.</p>
-                                <span class="inline-block bg-violet-500 text-white text-xs px-3 py-1 rounded-full">Always Visible</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Donut, Line, Pie, and Bar
+                                    charts. Track completion trends over time.</p>
+                                <span
+                                    class="inline-block bg-violet-500 text-white text-xs px-3 py-1 rounded-full">Always
+                                    Visible</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-900 dark:to-green-900 p-5 rounded-xl border-2 border-lime-200 dark:border-lime-700 hover:shadow-lg transition">
+                    <div
+                        class="bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-900 dark:to-green-900 p-5 rounded-xl border-2 border-lime-200 dark:border-lime-700 hover:shadow-lg transition">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">📈</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Weekly Progress</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">See progress by area with subsection breakdown. Visual progress bars!</p>
-                                <span class="inline-block bg-lime-600 text-white text-xs px-3 py-1 rounded-full">Scroll Down</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">See progress by area with
+                                    subsection breakdown. Visual progress bars!</p>
+                                <span class="inline-block bg-lime-600 text-white text-xs px-3 py-1 rounded-full">Scroll
+                                    Down</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-900 dark:to-blue-900 p-5 rounded-xl border-2 border-sky-200 dark:border-sky-700 hover:shadow-lg transition cursor-pointer" onclick="setView('today'); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-900 dark:to-blue-900 p-5 rounded-xl border-2 border-sky-200 dark:border-sky-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="setView('today'); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">👁️</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">View Modes</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Toggle between Today, Week, and Month views for filtered task lists.</p>
-                                <span class="inline-block bg-sky-500 text-white text-xs px-3 py-1 rounded-full">Top of Page</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Toggle between Today, Week, and
+                                    Month views for filtered task lists.</p>
+                                <span class="inline-block bg-sky-500 text-white text-xs px-3 py-1 rounded-full">Top of
+                                    Page</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 dark:from-fuchsia-900 dark:to-pink-900 p-5 rounded-xl border-2 border-fuchsia-200 dark:border-fuchsia-700 hover:shadow-lg transition cursor-pointer" onclick="toggleDarkMode(); toggleFeatureMenu();">
+                    <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 dark:from-fuchsia-900 dark:to-pink-900 p-5 rounded-xl border-2 border-fuchsia-200 dark:border-fuchsia-700 hover:shadow-lg transition cursor-pointer"
+                        onclick="toggleDarkMode(); toggleFeatureMenu();">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🌓</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Dark Mode</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Easy on the eyes! Toggle between light and dark themes instantly.</p>
-                                <span class="inline-block bg-fuchsia-500 text-white text-xs px-3 py-1 rounded-full">Click to Toggle</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Easy on the eyes! Toggle
+                                    between light and dark themes instantly.</p>
+                                <span
+                                    class="inline-block bg-fuchsia-500 text-white text-xs px-3 py-1 rounded-full">Click
+                                    to Toggle</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 p-5 rounded-xl border-2 border-amber-200 dark:border-amber-700 hover:shadow-lg transition">
+                    <div
+                        class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 p-5 rounded-xl border-2 border-amber-200 dark:border-amber-700 hover:shadow-lg transition">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">💾</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">100% Private</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">All data stored locally. No servers, no uploads. Works offline!</p>
-                                <span class="inline-block bg-amber-600 text-white text-xs px-3 py-1 rounded-full">Always Active</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">All data stored locally. No
+                                    servers, no uploads. Works offline!</p>
+                                <span class="inline-block bg-amber-600 text-white text-xs px-3 py-1 rounded-full">Always
+                                    Active</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900 dark:to-red-900 p-5 rounded-xl border-2 border-rose-200 dark:border-rose-700 hover:shadow-lg transition">
+                    <div
+                        class="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900 dark:to-red-900 p-5 rounded-xl border-2 border-rose-200 dark:border-rose-700 hover:shadow-lg transition">
                         <div class="flex items-start gap-4">
                             <div class="text-4xl">🎨</div>
                             <div class="flex-1">
                                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Color Coding</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">6 colors for areas, 3 priority levels. Visual organization at a glance!</p>
-                                <span class="inline-block bg-rose-500 text-white text-xs px-3 py-1 rounded-full">In Task Form</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">6 colors for areas, 3 priority
+                                    levels. Visual organization at a glance!</p>
+                                <span class="inline-block bg-rose-500 text-white text-xs px-3 py-1 rounded-full">In Task
+                                    Form</span>
                             </div>
                         </div>
                     </div>
@@ -438,33 +584,40 @@
             <div class="mb-8">
                 <h1 class="text-6xl font-bold text-white mb-4" id="focus-task-name">Loading...</h1>
                 <p class="text-2xl text-gray-300 mb-2" id="focus-task-area"></p>
-                <span class="inline-block px-6 py-2 rounded-full text-white text-xl font-bold" id="focus-task-priority"></span>
+                <span class="inline-block px-6 py-2 rounded-full text-white text-xl font-bold"
+                    id="focus-task-priority"></span>
             </div>
 
             <!-- Pomodoro Timer -->
             <div class="mb-12">
                 <div class="text-8xl font-bold text-white mb-6" id="pomodoro-timer">25:00</div>
                 <div class="flex justify-center gap-4">
-                    <button onclick="startPomodoro()" id="start-pomodoro" class="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl text-xl font-bold transition">
+                    <button onclick="startPomodoro()" id="start-pomodoro"
+                        class="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl text-xl font-bold transition">
                         ▶ Start
                     </button>
-                    <button onclick="pausePomodoro()" id="pause-pomodoro" class="hidden bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-4 rounded-xl text-xl font-bold transition">
+                    <button onclick="pausePomodoro()" id="pause-pomodoro"
+                        class="hidden bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-4 rounded-xl text-xl font-bold transition">
                         ⏸ Pause
                     </button>
-                    <button onclick="resetPomodoro()" class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-4 rounded-xl text-xl font-bold transition">
+                    <button onclick="resetPomodoro()"
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-4 rounded-xl text-xl font-bold transition">
                         🔄 Reset
                     </button>
                 </div>
             </div>
 
             <div class="flex justify-center gap-4">
-                <button onclick="completeFocusTask()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-medium transition">
+                <button onclick="completeFocusTask()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-medium transition">
                     ✅ Mark Complete
                 </button>
-                <button onclick="skipFocusTask()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition">
+                <button onclick="skipFocusTask()"
+                    class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition">
                     ⏭ Skip to Next
                 </button>
-                <button onclick="exitFocusMode()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition">
+                <button onclick="exitFocusMode()"
+                    class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg font-medium transition">
                     ❌ Exit Focus Mode
                 </button>
             </div>
@@ -472,25 +625,29 @@
     </div>
 
     <!-- Time Boxing Modal -->
-    <div id="timeBoxingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h2 class="text-2xl font-bold">⏰ Time Blocking - Drag Tasks to Calendar</h2>
-                <button onclick="hideTimeBoxing()" class="text-gray-500 hover:text-gray-700">
+    <div id="timeBoxingModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">⏰ Time Blocking - Drag Tasks to Calendar
+                </h2>
+                <button onclick="hideTimeBoxing()"
+                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
-            <div class="grid grid-cols-2 divide-x max-h-[70vh] overflow-y-auto">
+            <div class="grid grid-cols-2 divide-x dark:divide-gray-700 max-h-[70vh] overflow-y-auto">
                 <!-- Left: Task List -->
                 <div class="p-6">
-                    <h3 class="font-bold text-lg mb-4">📋 Unscheduled Tasks</h3>
+                    <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">📋 Unscheduled Tasks</h3>
                     <div id="timebox-tasks" class="space-y-2"></div>
                 </div>
                 <!-- Right: Calendar -->
                 <div class="p-6">
-                    <h3 class="font-bold text-lg mb-4">📅 Today's Schedule</h3>
+                    <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">📅 Today's Schedule</h3>
                     <div id="timebox-calendar" class="space-y-1"></div>
                 </div>
             </div>
@@ -498,34 +655,43 @@
     </div>
 
     <!-- Dependencies Modal -->
-    <div id="dependencyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div id="dependencyModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">🔗 Task Dependencies</h2>
-                <button onclick="hideDependencyView()" class="text-gray-500 hover:text-gray-700">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">🔗 Task Dependencies</h2>
+                <button onclick="hideDependencyView()"
+                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
 
             <div class="mb-6">
-                <p class="text-gray-600 mb-4">Link tasks that depend on each other. Dependent tasks will be hidden until prerequisites are completed.</p>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Link tasks that depend on each other. Dependent tasks
+                    will be hidden until prerequisites are completed.</p>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">This task:</label>
-                        <select id="dependent-task" class="w-full border rounded-lg p-2">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">This
+                            task:</label>
+                        <select id="dependent-task"
+                            class="w-full border dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100">
                             <option value="">Select task</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2">Depends on:</label>
-                        <select id="prerequisite-task" class="w-full border rounded-lg p-2">
+                        <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">Depends
+                            on:</label>
+                        <select id="prerequisite-task"
+                            class="w-full border dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100">
                             <option value="">Select prerequisite</option>
                         </select>
                     </div>
                 </div>
-                <button onclick="addDependency()" class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
+                <button onclick="addDependency()"
+                    class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
                     Add Dependency
                 </button>
             </div>
@@ -535,18 +701,22 @@
     </div>
 
     <!-- End of Day Review Modal -->
-    <div id="eodReviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4">
-            <h2 class="text-3xl font-bold mb-4">🌙 End of Day Review</h2>
-            <p class="text-gray-600 mb-6">You didn't complete these tasks today. What would you like to do with them?</p>
-            
+    <div id="eodReviewModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full mx-4">
+            <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">🌙 End of Day Review</h2>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">You didn't complete these tasks today. What would you like
+                to do with them?</p>
+
             <div id="eod-tasks-list" class="space-y-4 mb-6 max-h-96 overflow-y-auto"></div>
 
             <div class="flex gap-3">
-                <button onclick="applyEODDecisions()" class="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition font-medium">
+                <button onclick="applyEODDecisions()"
+                    class="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition font-medium">
                     Apply Decisions
                 </button>
-                <button onclick="hideEODReview()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-medium">
+                <button onclick="hideEODReview()"
+                    class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium">
                     Skip for Now
                 </button>
             </div>
@@ -555,37 +725,46 @@
 
     <!-- Add Task Modal -->
     <div id="addTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 class="text-2xl font-bold mb-6">Add New Task</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Add New Task</h2>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Task Name</label>
-                    <input type="text" id="task-name" placeholder="e.g., Complete project report" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Name</label>
+                    <input type="text" id="task-name" placeholder="e.g., Complete project report"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Area / Category</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Area /
+                        Category</label>
                     <div class="flex gap-2">
-                        <select id="task-area" class="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="handleAreaChange()">
+                        <select id="task-area"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                            onchange="handleAreaChange()">
                             <option value="">Select area</option>
                         </select>
-                        <button onclick="showAddAreaModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 rounded-lg">+</button>
+                        <button onclick="showAddAreaModal()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 rounded-lg">+</button>
                     </div>
                 </div>
 
                 <div id="subsection-container" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subsection (Optional)</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Subsection
+                        (Optional)</label>
                     <div class="flex gap-2">
-                        <select id="task-subsection" class="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select id="task-subsection"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
                             <option value="">No subsection</option>
                         </select>
-                        <button onclick="showAddSubsectionModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 rounded-lg">+</button>
+                        <button onclick="showAddSubsectionModal()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 rounded-lg">+</button>
                     </div>
                 </div>
-                
+
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
-                    <select id="task-priority" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Priority</label>
+                    <select id="task-priority"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
                         <option value="LOW">Low Priority</option>
                         <option value="MEDIUM">Medium Priority</option>
                         <option value="HIGH">High Priority</option>
@@ -593,15 +772,18 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-                    <input type="date" id="task-date" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Date</label>
+                    <input type="date" id="task-date"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
                 </div>
 
                 <div class="flex gap-3">
-                    <button onclick="addTask()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
+                    <button onclick="addTask()"
+                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
                         Add Task
                     </button>
-                    <button onclick="hideAddTaskModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium transition">
+                    <button onclick="hideAddTaskModal()"
+                        class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-3 rounded-lg font-medium transition">
                         Cancel
                     </button>
                 </div>
@@ -611,27 +793,36 @@
 
     <!-- Add Area Modal -->
     <div id="addAreaModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h2 class="text-2xl font-bold mb-6">Add New Area</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Add New Area</h2>
             <div class="space-y-4">
-                <input type="text" id="area-name" placeholder="e.g., Work, Personal, Health" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <input type="text" id="area-name" placeholder="e.g., Work, Personal, Health"
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Color</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Color</label>
                     <div class="grid grid-cols-6 gap-2">
-                        <button onclick="selectAreaColor('#3b82f6')" class="w-10 h-10 rounded-full bg-blue-500 border-2 border-transparent hover:border-gray-800"></button>
-                        <button onclick="selectAreaColor('#10b981')" class="w-10 h-10 rounded-full bg-green-500 border-2 border-transparent hover:border-gray-800"></button>
-                        <button onclick="selectAreaColor('#f59e0b')" class="w-10 h-10 rounded-full bg-orange-500 border-2 border-transparent hover:border-gray-800"></button>
-                        <button onclick="selectAreaColor('#ef4444')" class="w-10 h-10 rounded-full bg-red-500 border-2 border-transparent hover:border-gray-800"></button>
-                        <button onclick="selectAreaColor('#8b5cf6')" class="w-10 h-10 rounded-full bg-purple-500 border-2 border-transparent hover:border-gray-800"></button>
-                        <button onclick="selectAreaColor('#ec4899')" class="w-10 h-10 rounded-full bg-pink-500 border-2 border-transparent hover:border-gray-800"></button>
+                        <button onclick="selectAreaColor('#3b82f6')"
+                            class="w-10 h-10 rounded-full bg-blue-500 border-2 border-transparent hover:border-gray-800"></button>
+                        <button onclick="selectAreaColor('#10b981')"
+                            class="w-10 h-10 rounded-full bg-green-500 border-2 border-transparent hover:border-gray-800"></button>
+                        <button onclick="selectAreaColor('#f59e0b')"
+                            class="w-10 h-10 rounded-full bg-orange-500 border-2 border-transparent hover:border-gray-800"></button>
+                        <button onclick="selectAreaColor('#ef4444')"
+                            class="w-10 h-10 rounded-full bg-red-500 border-2 border-transparent hover:border-gray-800"></button>
+                        <button onclick="selectAreaColor('#8b5cf6')"
+                            class="w-10 h-10 rounded-full bg-purple-500 border-2 border-transparent hover:border-gray-800"></button>
+                        <button onclick="selectAreaColor('#ec4899')"
+                            class="w-10 h-10 rounded-full bg-pink-500 border-2 border-transparent hover:border-gray-800"></button>
                     </div>
                     <input type="hidden" id="selected-area-color" value="#3b82f6">
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="addArea()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
+                    <button onclick="addArea()"
+                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
                         Add Area
                     </button>
-                    <button onclick="hideAddAreaModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium transition">
+                    <button onclick="hideAddAreaModal()"
+                        class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-3 rounded-lg font-medium transition">
                         Cancel
                     </button>
                 </div>
@@ -640,16 +831,20 @@
     </div>
 
     <!-- Add Subsection Modal -->
-    <div id="addSubsectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h2 class="text-2xl font-bold mb-6">Add Subsection</h2>
+    <div id="addSubsectionModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Add Subsection</h2>
             <div class="space-y-4">
-                <input type="text" id="subsection-name" placeholder="e.g., Planning, Execution, Review" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <input type="text" id="subsection-name" placeholder="e.g., Planning, Execution, Review"
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
                 <div class="flex gap-3">
-                    <button onclick="addSubsection()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
+                    <button onclick="addSubsection()"
+                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
                         Add Subsection
                     </button>
-                    <button onclick="hideAddSubsectionModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium transition">
+                    <button onclick="hideAddSubsectionModal()"
+                        class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-3 rounded-lg font-medium transition">
                         Cancel
                     </button>
                 </div>
@@ -658,84 +853,174 @@
     </div>
 
     <!-- Notification Settings Modal -->
-    <div id="notificationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h2 class="text-2xl font-bold mb-6">🔔 Notification Settings</h2>
-            
+    <div id="notificationModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">🔔 Notification Settings</h2>
+
             <div class="space-y-6">
                 <!-- Enable/Disable Notifications -->
-                <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div class="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
                     <div>
-                        <p class="font-semibold text-gray-800">Enable Notifications</p>
-                        <p class="text-sm text-gray-600">Get reminders about pending tasks</p>
+                        <p class="font-semibold text-gray-800 dark:text-white">Enable Notifications</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">Get reminders about pending tasks</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="notification-toggle" class="sr-only peer" onchange="toggleNotifications()">
-                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                        <input type="checkbox" id="notification-toggle" class="sr-only peer"
+                            onchange="toggleNotifications()">
+                        <div
+                            class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500">
+                        </div>
                     </label>
                 </div>
 
                 <!-- Notification Frequency -->
                 <div id="notification-frequency-section" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Notification Frequency</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Notification
+                        Frequency</label>
                     <div class="flex gap-3">
-                        <input type="number" id="notification-interval" min="1" max="1440" value="30" class="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <select id="notification-unit" class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="number" id="notification-interval" min="1" max="1440" value="30"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+                        <select id="notification-unit"
+                            class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
                             <option value="minutes">Minutes</option>
                             <option value="hours">Hours</option>
                         </select>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">You'll receive reminders every <span id="frequency-display">30 minutes</span></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">You'll receive reminders every <span
+                            id="frequency-display">30 minutes</span></p>
                 </div>
 
                 <!-- Notification Type -->
                 <div id="notification-type-section" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Notification Type</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Notification
+                        Type</label>
                     <div class="space-y-2">
-                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <label
+                            class="flex items-center p-3 border dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                             <input type="radio" name="notification-type" value="pending" checked class="mr-3">
                             <div>
-                                <p class="font-medium">Pending Tasks Only</p>
-                                <p class="text-xs text-gray-600">Notify about incomplete tasks</p>
+                                <p class="font-medium text-gray-800 dark:text-white">Pending Tasks Only</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-300">Notify about incomplete tasks</p>
                             </div>
                         </label>
-                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <label
+                            class="flex items-center p-3 border dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                             <input type="radio" name="notification-type" value="all" class="mr-3">
                             <div>
-                                <p class="font-medium">All Tasks</p>
-                                <p class="text-xs text-gray-600">Notify about all today's tasks</p>
+                                <p class="font-medium text-gray-800 dark:text-white">All Tasks</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-300">Notify about all today's tasks</p>
                             </div>
                         </label>
-                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <label
+                            class="flex items-center p-3 border dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                             <input type="radio" name="notification-type" value="high" class="mr-3">
                             <div>
-                                <p class="font-medium">High Priority Only</p>
-                                <p class="text-xs text-gray-600">Notify about high priority tasks</p>
+                                <p class="font-medium text-gray-800 dark:text-white">High Priority Only</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-300">Notify about high priority tasks</p>
                             </div>
                         </label>
                     </div>
                 </div>
 
                 <!-- Notification Preview -->
-                <div id="notification-preview" class="hidden p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-l-4 border-blue-500">
+                <div id="notification-preview"
+                    class="hidden p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-l-4 border-blue-500">
                     <p class="text-sm font-semibold text-gray-800 dark:text-white mb-1">📋 Task Reminder</p>
                     <p class="text-sm text-gray-600">You have <strong>5 pending tasks</strong> today!</p>
                 </div>
 
                 <!-- Buttons -->
                 <div class="flex gap-3">
-                    <button onclick="saveNotificationSettings()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
+                    <button onclick="saveNotificationSettings()"
+                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
                         Save Settings
                     </button>
-                    <button onclick="hideNotificationSettings()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium transition">
+                    <button onclick="hideNotificationSettings()"
+                        class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-3 rounded-lg font-medium transition">
                         Cancel
                     </button>
                 </div>
 
                 <!-- Test Notification -->
-                <button onclick="sendTestNotification()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium transition text-sm">
+                <button onclick="sendTestNotification()"
+                    class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium transition text-sm">
                     🔔 Send Test Notification
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spotify Modal -->
+    <div id="spotifyModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-end sm:items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-[#121212] rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-[#282828]">
+            <!-- Header -->
+            <div class="bg-gradient-to-b from-[#1DB954] to-[#121212] p-8 pb-4 text-center">
+                <button onclick="toggleSpotifyModal()"
+                    class="absolute top-4 right-4 text-white opacity-60 hover:opacity-100 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+                <!-- Spotify Logo large -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168"
+                    class="w-20 h-20 mx-auto mb-3 drop-shadow-2xl">
+                    <path fill="#1DB954"
+                        d="M84 0C37.6 0 0 37.6 0 84s37.6 84 84 84 84-37.6 84-84S130.4 0 84 0zm38.5 121.2c-1.5 2.5-4.8 3.3-7.3 1.8-20-12.2-45.2-15-74.9-8.2-2.9.7-5.7-1.1-6.4-4-.7-2.9 1.1-5.7 4-6.4 32.5-7.4 60.4-4.2 82.9 9.5 2.5 1.5 3.3 4.8 1.8 7.3zm10.3-22.9c-1.9 3.1-5.9 4.1-9 2.2-22.9-14.1-57.8-18.2-84.9-9.9-3.5 1.1-7.2-.9-8.2-4.4-1.1-3.5.9-7.2 4.4-8.2 30.9-9.4 69.3-4.8 95.6 11.3 3.1 1.9 4.1 5.9 2.1 9zm.9-23.8c-27.5-16.3-72.9-17.8-99.1-9.8-4.2 1.3-8.6-1.1-9.9-5.2-1.3-4.2 1.1-8.6 5.2-9.9 30.2-9.1 80.3-7.4 112 11.4 3.8 2.2 5 7.1 2.8 10.8-2.2 3.8-7.1 5-10.9 2.8l-.1-.1z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-white tracking-tight">Spotify</h2>
+                <p class="text-[#b3b3b3] text-sm mt-1">Music makes you more productive 🎧</p>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 pt-4 space-y-4">
+                <!-- Connect Button -->
+                <a href="https://open.spotify.com" target="_blank" rel="noopener" onclick="onSpotifyConnect()"
+                    class="flex items-center justify-center gap-3 w-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold py-4 rounded-full transition-all hover:scale-105 shadow-lg shadow-green-900/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168" class="w-6 h-6">
+                        <path fill="#000"
+                            d="M84 0C37.6 0 0 37.6 0 84s37.6 84 84 84 84-37.6 84-84S130.4 0 84 0zm38.5 121.2c-1.5 2.5-4.8 3.3-7.3 1.8-20-12.2-45.2-15-74.9-8.2-2.9.7-5.7-1.1-6.4-4-.7-2.9 1.1-5.7 4-6.4 32.5-7.4 60.4-4.2 82.9 9.5 2.5 1.5 3.3 4.8 1.8 7.3zm10.3-22.9c-1.9 3.1-5.9 4.1-9 2.2-22.9-14.1-57.8-18.2-84.9-9.9-3.5 1.1-7.2-.9-8.2-4.4-1.1-3.5.9-7.2 4.4-8.2 30.9-9.4 69.3-4.8 95.6 11.3 3.1 1.9 4.1 5.9 2.1 9zm.9-23.8c-27.5-16.3-72.9-17.8-99.1-9.8-4.2 1.3-8.6-1.1-9.9-5.2-1.3-4.2 1.1-8.6 5.2-9.9 30.2-9.1 80.3-7.4 112 11.4 3.8 2.2 5 7.1 2.8 10.8-2.2 3.8-7.1 5-10.9 2.8l-.1-.1z" />
+                    </svg>
+                    Open Spotify
+                </a>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 h-px bg-[#282828]"></div>
+                    <span class="text-[#535353] text-xs font-medium">STUDY PLAYLISTS</span>
+                    <div class="flex-1 h-px bg-[#282828]"></div>
+                </div>
+
+                <!-- Quick Genre Buttons -->
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="https://open.spotify.com/search/lofi%20hip%20hop%20study" target="_blank" rel="noopener"
+                        class="flex items-center gap-2 bg-[#282828] hover:bg-[#333] text-white rounded-xl px-4 py-3 transition group">
+                        <span class="text-xl">🎵</span>
+                        <span class="text-sm font-medium">Lo-fi</span>
+                    </a>
+                    <a href="https://open.spotify.com/search/focus%20music%20study" target="_blank" rel="noopener"
+                        class="flex items-center gap-2 bg-[#282828] hover:bg-[#333] text-white rounded-xl px-4 py-3 transition group">
+                        <span class="text-xl">🧠</span>
+                        <span class="text-sm font-medium">Focus</span>
+                    </a>
+                    <a href="https://open.spotify.com/search/classical%20study%20music" target="_blank" rel="noopener"
+                        class="flex items-center gap-2 bg-[#282828] hover:bg-[#333] text-white rounded-xl px-4 py-3 transition group">
+                        <span class="text-xl">🎻</span>
+                        <span class="text-sm font-medium">Classical</span>
+                    </a>
+                    <a href="https://open.spotify.com/search/jazz%20study%20music" target="_blank" rel="noopener"
+                        class="flex items-center gap-2 bg-[#282828] hover:bg-[#333] text-white rounded-xl px-4 py-3 transition group">
+                        <span class="text-xl">🎷</span>
+                        <span class="text-sm font-medium">Jazz</span>
+                    </a>
+                </div>
+
+                <!-- Footer tip -->
+                <p class="text-center text-[#535353] text-xs pb-1">
+                    🎧 Music helps you <span class="text-[#1DB954]">study smarter</span>, not harder
+                </p>
             </div>
         </div>
     </div>
@@ -760,9 +1045,25 @@
         let currentFocusTask = null;
         let darkMode = localStorage.getItem('darkMode') === 'true';
 
-        // Load user initials
-        const savedInitials = localStorage.getItem('userInitials') || 'N';
-        document.getElementById('user-initials').textContent = savedInitials;
+        // Load user preferences
+
+        // SPOTIFY FUNCTIONS
+        function toggleSpotifyModal() {
+            const modal = document.getElementById('spotifyModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function onSpotifyConnect() {
+            // Show the green pulsing dot on the Spotify button to indicate active session
+            document.getElementById('spotify-playing-dot').classList.remove('hidden');
+            // Close modal after a short delay
+            setTimeout(() => toggleSpotifyModal(), 400);
+        }
+
+        // Close Spotify modal when clicking the backdrop
+        document.getElementById('spotifyModal').addEventListener('click', function (e) {
+            if (e.target === this) toggleSpotifyModal();
+        });
 
         // DARK MODE FUNCTIONS
         function initDarkMode() {
@@ -776,13 +1077,13 @@
         function toggleDarkMode() {
             darkMode = !darkMode;
             localStorage.setItem('darkMode', darkMode);
-            
+
             if (darkMode) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
-            
+
             // Update charts for dark mode
             updateChartsTheme();
         }
@@ -790,7 +1091,7 @@
         function updateChartsTheme() {
             const textColor = darkMode ? '#e5e7eb' : '#374151';
             const gridColor = darkMode ? '#374151' : '#e5e7eb';
-            
+
             // Update all charts
             if (progressChart) {
                 progressChart.options.plugins.legend.labels.color = textColor;
@@ -825,7 +1126,7 @@
         function showFocusMode() {
             const today = new Date().toISOString().split('T')[0];
             const availableTasks = getAvailableTasksWithDependencies(tasks.filter(t => t.date === today && !t.completed));
-            
+
             if (availableTasks.length === 0) {
                 alert('🎉 No pending tasks for today! Great job!');
                 return;
@@ -834,17 +1135,17 @@
             // Get highest priority task
             const priorityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
             const focusTask = availableTasks.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority])[0];
-            
+
             currentFocusTask = focusTask;
             document.getElementById('focus-task-name').textContent = focusTask.name;
-            
+
             const area = focusTask.areaId ? areas.find(a => a.id === focusTask.areaId) : null;
             document.getElementById('focus-task-area').textContent = area ? `📁 ${area.name}` : '';
-            
+
             const priorityEl = document.getElementById('focus-task-priority');
             priorityEl.textContent = focusTask.priority + ' PRIORITY';
             priorityEl.className = `inline-block px-6 py-2 rounded-full text-white text-xl font-bold ${getPriorityColor(focusTask.priority)}`;
-            
+
             resetPomodoro();
             document.getElementById('focusModeModal').classList.remove('hidden');
         }
@@ -873,11 +1174,11 @@
         function startPomodoro() {
             document.getElementById('start-pomodoro').classList.add('hidden');
             document.getElementById('pause-pomodoro').classList.remove('hidden');
-            
+
             pomodoroInterval = setInterval(() => {
                 pomodoroSeconds--;
                 updatePomodoroDisplay();
-                
+
                 if (pomodoroSeconds <= 0) {
                     clearInterval(pomodoroInterval);
                     playNotificationSound();
@@ -904,7 +1205,7 @@
         function updatePomodoroDisplay() {
             const mins = Math.floor(pomodoroSeconds / 60);
             const secs = pomodoroSeconds % 60;
-            document.getElementById('pomodoro-timer').textContent = 
+            document.getElementById('pomodoro-timer').textContent =
                 `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
@@ -931,7 +1232,7 @@
         function updateDependencyDropdowns() {
             const today = new Date().toISOString().split('T')[0];
             const todayTasks = tasks.filter(t => t.date === today);
-            
+
             const options = todayTasks.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
             document.getElementById('dependent-task').innerHTML = '<option value="">Select task</option>' + options;
             document.getElementById('prerequisite-task').innerHTML = '<option value="">Select prerequisite</option>' + options;
@@ -940,23 +1241,23 @@
         function addDependency() {
             const dependentId = parseInt(document.getElementById('dependent-task').value);
             const prerequisiteId = parseInt(document.getElementById('prerequisite-task').value);
-            
+
             if (!dependentId || !prerequisiteId) {
                 alert('Please select both tasks');
                 return;
             }
-            
+
             if (dependentId === prerequisiteId) {
                 alert('A task cannot depend on itself');
                 return;
             }
-            
+
             // Check for circular dependencies
             if (wouldCreateCircularDependency(dependentId, prerequisiteId)) {
                 alert('This would create a circular dependency!');
                 return;
             }
-            
+
             dependencies.push({ dependentId, prerequisiteId });
             localStorage.setItem('dependencies', JSON.stringify(dependencies));
             renderDependencyList();
@@ -968,7 +1269,7 @@
             const checkChain = (taskId, targetId, visited = new Set()) => {
                 if (visited.has(taskId)) return false;
                 visited.add(taskId);
-                
+
                 const deps = dependencies.filter(d => d.dependentId === taskId);
                 for (let dep of deps) {
                     if (dep.prerequisiteId === targetId) return true;
@@ -976,7 +1277,7 @@
                 }
                 return false;
             };
-            
+
             return checkChain(prerequisiteId, dependentId);
         }
 
@@ -986,7 +1287,7 @@
                 container.innerHTML = '<p class="text-gray-500 text-center py-4">No dependencies set</p>';
                 return;
             }
-            
+
             container.innerHTML = dependencies.map((dep, index) => {
                 const dependent = tasks.find(t => t.id === dep.dependentId);
                 const prerequisite = tasks.find(t => t.id === dep.prerequisiteId);
@@ -1018,7 +1319,7 @@
             return taskList.filter(task => {
                 const deps = dependencies.filter(d => d.dependentId === task.id);
                 if (deps.length === 0) return true;
-                
+
                 // Check if all prerequisites are completed
                 return deps.every(dep => {
                     const prereq = tasks.find(t => t.id === dep.prerequisiteId);
@@ -1041,46 +1342,46 @@
             const today = new Date().toISOString().split('T')[0];
             const todayTasks = tasks.filter(t => t.date === today && !t.completed);
             const unscheduledTasks = todayTasks.filter(t => !timeBlocks[t.id]);
-            
+
             // Render unscheduled tasks
             const tasksContainer = document.getElementById('timebox-tasks');
             tasksContainer.innerHTML = unscheduledTasks.length > 0 ? unscheduledTasks.map(task => {
                 const area = task.areaId ? areas.find(a => a.id === task.areaId) : null;
                 return `
-                    <div class="p-3 bg-white border-2 rounded-lg cursor-move hover:shadow-lg transition" draggable="true" ondragstart="dragTask(event, ${task.id})">
-                        <div class="font-medium">${task.name}</div>
-                        <div class="text-sm text-gray-600 mt-1">
+                    <div class="p-3 bg-white dark:bg-gray-700 border-2 dark:border-gray-600 rounded-lg cursor-move hover:shadow-lg transition" draggable="true" ondragstart="dragTask(event, ${task.id})">
+                        <div class="font-medium text-gray-800 dark:text-white">${task.name}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
                             ${area ? `<span class="text-xs px-2 py-1 rounded" style="background: ${area.color}22; color: ${area.color}">${area.name}</span>` : ''}
                             <span class="ml-2 px-2 py-1 rounded text-white text-xs ${getPriorityColor(task.priority)}">${task.priority}</span>
                         </div>
                     </div>
                 `;
-            }).join('') : '<p class="text-gray-500 text-center py-4">All tasks scheduled!</p>';
-            
+            }).join('') : '<p class="text-gray-500 dark:text-gray-400 text-center py-4">All tasks scheduled!</p>';
+
             // Render 24-hour calendar
             const calendarContainer = document.getElementById('timebox-calendar');
-            const hours = Array.from({length: 24}, (_, i) => i);
+            const hours = Array.from({ length: 24 }, (_, i) => i);
             calendarContainer.innerHTML = hours.map(hour => {
                 const hourStr = `${String(hour).padStart(2, '0')}:00`;
                 const blocksInHour = Object.entries(timeBlocks).filter(([taskId, block]) => {
                     return block.start.startsWith(String(hour).padStart(2, '0'));
                 });
-                
+
                 return `
-                    <div class="border rounded p-2 min-h-16 bg-gray-50 hover:bg-gray-100 transition" 
+                    <div class="border dark:border-gray-600 rounded p-2 min-h-16 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition" 
                          ondrop="dropTask(event, '${hourStr}')" 
                          ondragover="allowDrop(event)">
-                        <div class="text-xs font-semibold text-gray-600 mb-1">${hourStr}</div>
+                        <div class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">${hourStr}</div>
                         ${blocksInHour.map(([taskId, block]) => {
-                            const task = tasks.find(t => t.id === parseInt(taskId));
-                            return task ? `
-                                <div class="text-sm bg-blue-100 border-l-4 border-blue-500 p-2 rounded mt-1">
-                                    <div class="font-medium">${task.name}</div>
-                                    <div class="text-xs text-gray-600">${block.start} - ${block.end}</div>
+                    const task = tasks.find(t => t.id === parseInt(taskId));
+                    return task ? `
+                                <div class="text-sm bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 p-2 rounded mt-1">
+                                    <div class="font-medium text-gray-800 dark:text-white">${task.name}</div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-300">${block.start} - ${block.end}</div>
                                     <button onclick="removeTimeBlock(${taskId})" class="text-xs text-red-500 hover:text-red-700">Remove</button>
                                 </div>
                             ` : '';
-                        }).join('')}
+                }).join('')}
                     </div>
                 `;
             }).join('');
@@ -1100,20 +1401,20 @@
         function dropTask(event, startTime) {
             event.preventDefault();
             if (!draggedTaskId) return;
-            
+
             const duration = prompt('How long will this task take? (in minutes)', '60');
             if (!duration || isNaN(duration)) return;
-            
+
             const [hour, minute] = startTime.split(':').map(Number);
             const endMinutes = minute + parseInt(duration);
             const endHour = hour + Math.floor(endMinutes / 60);
             const endMinute = endMinutes % 60;
-            
+
             timeBlocks[draggedTaskId] = {
                 start: startTime,
                 end: `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
             };
-            
+
             localStorage.setItem('timeBlocks', JSON.stringify(timeBlocks));
             draggedTaskId = null;
             renderTimeBoxingView();
@@ -1130,10 +1431,10 @@
             if (!taskHistory[taskId]) {
                 taskHistory[taskId] = { reschedules: 0, edits: 0, created: new Date().toISOString() };
             }
-            
+
             if (action === 'reschedule') taskHistory[taskId].reschedules++;
             if (action === 'edit') taskHistory[taskId].edits++;
-            
+
             taskHistory[taskId].lastModified = new Date().toISOString();
             localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
         }
@@ -1145,14 +1446,14 @@
                     const task = tasks.find(t => t.id === parseInt(taskId));
                     return task ? { task, history } : null;
                 }).filter(Boolean);
-            
+
             const container = document.getElementById('procrastination-heatmap');
-            
+
             if (problematicTasks.length === 0) {
                 container.innerHTML = '<p class="text-green-600 text-center py-8 font-semibold">✅ No procrastination patterns detected! You\'re doing great!</p>';
                 return;
             }
-            
+
             // Show analysis
             container.innerHTML = `
                 <div class="space-y-4">
@@ -1181,9 +1482,9 @@
         async function getAICoaching(taskId) {
             const task = tasks.find(t => t.id === taskId);
             const history = taskHistory[taskId];
-            
+
             if (!task) return;
-            
+
             try {
                 const response = await fetch("https://api.anthropic.com/v1/messages", {
                     method: "POST",
@@ -1209,7 +1510,7 @@ Be brief and actionable.`
 
                 const data = await response.json();
                 const coaching = data.content.map(item => item.text || '').join('\n');
-                
+
                 alert(`🤖 AI Coaching for "${task.name}":\n\n${coaching}`);
             } catch (error) {
                 alert('Unable to get AI coaching. Please try again.');
@@ -1220,16 +1521,16 @@ Be brief and actionable.`
         function showEODReview() {
             const today = new Date().toISOString().split('T')[0];
             const incompleteTasks = tasks.filter(t => t.date === today && !t.completed);
-            
+
             if (incompleteTasks.length === 0) {
                 alert('🎉 All tasks completed! Great job!');
                 return;
             }
-            
+
             const container = document.getElementById('eod-tasks-list');
             container.innerHTML = incompleteTasks.map(task => `
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <div class="font-medium mb-3">${task.name}</div>
+                <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="font-medium mb-3 text-gray-800 dark:text-white">${task.name}</div>
                     <div class="flex gap-2">
                         <button onclick="eodReschedule(${task.id})" class="flex-1 bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition text-sm">
                             📅 Reschedule Tomorrow
@@ -1244,7 +1545,7 @@ Be brief and actionable.`
                     <input type="hidden" id="eod-decision-${task.id}" value="">
                 </div>
             `).join('');
-            
+
             document.getElementById('eodReviewModal').classList.remove('hidden');
         }
 
@@ -1280,12 +1581,12 @@ Be brief and actionable.`
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
-            
+
             const incompleteTasks = tasks.filter(t => t.date === today && !t.completed);
-            
+
             incompleteTasks.forEach(task => {
                 const decision = document.getElementById(`eod-decision-${task.id}`)?.value;
-                
+
                 if (decision === 'reschedule') {
                     task.date = tomorrowStr;
                     trackTaskModification(task.id, 'reschedule');
@@ -1296,7 +1597,7 @@ Be brief and actionable.`
                     tasks = tasks.filter(t => t.id !== task.id);
                 }
             });
-            
+
             localStorage.setItem('tasks', JSON.stringify(tasks));
             hideEODReview();
             render();
@@ -1309,7 +1610,7 @@ Be brief and actionable.`
                 showEODReview();
             }
         }
-        
+
         setInterval(checkEODTime, 60000); // Check every minute
 
         // Area Management Functions
@@ -1344,7 +1645,7 @@ Be brief and actionable.`
             subsections[area.id] = []; // Initialize empty subsections array
             localStorage.setItem('areas', JSON.stringify(areas));
             localStorage.setItem('subsections', JSON.stringify(subsections));
-            
+
             hideAddAreaModal();
             updateAreaDropdown();
             renderWeeklyProgress();
@@ -1359,7 +1660,7 @@ Be brief and actionable.`
         function handleAreaChange() {
             const selectedAreaId = document.getElementById('task-area').value;
             const subsectionContainer = document.getElementById('subsection-container');
-            
+
             if (selectedAreaId && subsections[selectedAreaId]) {
                 subsectionContainer.classList.remove('hidden');
                 updateSubsectionDropdown(selectedAreaId);
@@ -1392,7 +1693,7 @@ Be brief and actionable.`
         function addSubsection() {
             const selectedAreaId = document.getElementById('task-area').value;
             const name = document.getElementById('subsection-name').value.trim();
-            
+
             if (!name) {
                 alert('Please enter a subsection name');
                 return;
@@ -1413,7 +1714,7 @@ Be brief and actionable.`
 
         function renderWeeklyProgress() {
             const container = document.getElementById('weekly-progress-container');
-            
+
             // Get date range for the week
             const today = new Date();
             const weekStart = new Date(today);
@@ -1462,35 +1763,35 @@ Be brief and actionable.`
             });
 
             container.innerHTML = areaProgress.map(({ area, completed, total, percentage, subsectionProgress }) => `
-                <div class="mb-6 p-6 border-l-4 rounded-lg bg-gray-50" style="border-color: ${area.color}">
+                <div class="mb-6 p-6 border-l-4 rounded-lg bg-gray-50 dark:bg-gray-700" style="border-color: ${area.color}">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-4 h-4 rounded-full" style="background: ${area.color}"></div>
-                            <h4 class="text-lg font-bold text-gray-800">${area.name}</h4>
+                            <h4 class="text-lg font-bold text-gray-800 dark:text-white">${area.name}</h4>
                         </div>
                         <div class="text-right">
                             <p class="text-2xl font-bold" style="color: ${area.color}">${percentage}%</p>
-                            <p class="text-sm text-gray-600">${completed}/${total} tasks</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">${completed}/${total} tasks</p>
                         </div>
                     </div>
                     
                     <!-- Progress Bar -->
-                    <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 mb-4">
                         <div class="h-3 rounded-full transition-all" style="width: ${percentage}%; background: ${area.color}"></div>
                     </div>
 
                     <!-- Subsections -->
                     ${Object.keys(subsectionProgress).length > 0 ? `
                         <div class="mt-4 space-y-2">
-                            <p class="text-sm font-semibold text-gray-700 mb-2">Subsections:</p>
+                            <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Subsections:</p>
                             ${Object.entries(subsectionProgress).map(([name, data]) => `
-                                <div class="flex items-center justify-between p-2 bg-white rounded">
-                                    <span class="text-sm text-gray-700">📁 ${name}</span>
+                                <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
+                                    <span class="text-sm text-gray-700 dark:text-gray-200">📁 ${name}</span>
                                     <div class="flex items-center gap-3">
-                                        <div class="w-24 bg-gray-200 rounded-full h-2">
+                                        <div class="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                                             <div class="h-2 rounded-full" style="width: ${data.percentage}%; background: ${area.color}"></div>
                                         </div>
-                                        <span class="text-sm font-medium text-gray-600">${data.completed}/${data.total}</span>
+                                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">${data.completed}/${data.total}</span>
                                     </div>
                                 </div>
                             `).join('')}
@@ -1522,7 +1823,7 @@ Be brief and actionable.`
             document.getElementById('notification-toggle').checked = notificationSettings.enabled;
             document.getElementById('notification-interval').value = notificationSettings.interval;
             document.getElementById('notification-unit').value = notificationSettings.unit;
-            
+
             const radios = document.getElementsByName('notification-type');
             radios.forEach(radio => {
                 radio.checked = radio.value === notificationSettings.type;
@@ -1554,10 +1855,10 @@ Be brief and actionable.`
         }
 
         // Listen for frequency changes
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const intervalInput = document.getElementById('notification-interval');
             const unitSelect = document.getElementById('notification-unit');
-            
+
             if (intervalInput) {
                 intervalInput.addEventListener('input', updateFrequencyDisplay);
             }
@@ -1642,7 +1943,7 @@ Be brief and actionable.`
             if (todayTasks.length > 0) {
                 const completedCount = tasks.filter(t => t.date === today && t.completed).length;
                 const totalCount = tasks.filter(t => t.date === today).length;
-                
+
                 let title = '📋 Task Reminder';
                 let body = '';
 
@@ -1674,7 +1975,7 @@ Be brief and actionable.`
                 });
 
                 // Focus window when notification is clicked
-                notification.onclick = function() {
+                notification.onclick = function () {
                     window.focus();
                     notification.close();
                 };
@@ -1736,16 +2037,16 @@ Be brief and actionable.`
         function renderCalendar() {
             const year = currentCalendarMonth.getFullYear();
             const month = currentCalendarMonth.getMonth();
-            
+
             // Update month display
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
             document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
 
             // Get first day of month and number of days
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
+
             // Get today's date for comparison
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
@@ -1764,28 +2065,28 @@ Be brief and actionable.`
                 const dayTasks = tasks.filter(t => t.date === dateStr);
                 const completedTasks = dayTasks.filter(t => t.completed).length;
                 const totalTasks = dayTasks.length;
-                
+
                 const isToday = dateStr === todayStr;
                 const hasSelectedDate = selectedDate === dateStr;
-                
+
                 let dayClass = 'p-3 rounded-lg border-2 cursor-pointer transition hover:shadow-lg ';
-                
+
                 if (isToday) {
-                    dayClass += 'border-blue-500 bg-blue-50 ';
+                    dayClass += 'border-blue-500 bg-blue-50 dark:bg-blue-900 ';
                 } else if (hasSelectedDate) {
-                    dayClass += 'border-purple-500 bg-purple-50 ';
+                    dayClass += 'border-purple-500 bg-purple-50 dark:bg-purple-900 ';
                 } else {
-                    dayClass += 'border-gray-200 hover:border-gray-300 ';
+                    dayClass += 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 dark:bg-gray-700 ';
                 }
 
                 calendarHTML += `
                     <div class="${dayClass}" onclick="selectDate('${dateStr}')">
-                        <div class="text-right font-semibold text-gray-700 mb-1">${day}</div>
+                        <div class="text-right font-semibold text-gray-700 dark:text-gray-100 mb-1">${day}</div>
                         ${totalTasks > 0 ? `
                             <div class="text-xs space-y-1">
                                 <div class="flex items-center justify-center gap-1">
                                     <div class="w-2 h-2 rounded-full ${completedTasks === totalTasks ? 'bg-green-500' : completedTasks > 0 ? 'bg-yellow-500' : 'bg-red-500'}"></div>
-                                    <span class="text-gray-600">${completedTasks}/${totalTasks}</span>
+                                    <span class="text-gray-600 dark:text-gray-300">${completedTasks}/${totalTasks}</span>
                                 </div>
                             </div>
                         ` : ''}
@@ -1799,71 +2100,71 @@ Be brief and actionable.`
         function selectDate(dateStr) {
             selectedDate = dateStr;
             const date = new Date(dateStr);
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                               'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            document.getElementById('selected-date-title').textContent = 
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+
+            document.getElementById('selected-date-title').textContent =
                 `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
-            
+
             const dayTasks = tasks.filter(t => t.date === dateStr);
-            
+
             if (dayTasks.length > 0) {
                 document.getElementById('selected-date-tasks').innerHTML = dayTasks.map(task => `
-                    <div class="flex items-center gap-3 p-3 bg-white rounded-lg border ${task.completed ? 'opacity-75' : ''}">
+                    <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 ${task.completed ? 'opacity-75' : ''}">
                         <input 
                             type="checkbox" 
                             ${task.completed ? 'checked' : ''} 
                             onchange="toggleTask(${task.id})"
                             class="w-5 h-5 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
                         >
-                        <span class="flex-1 ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}">${task.name}</span>
+                        <span class="flex-1 ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-white'}">${task.name}</span>
                         <span class="px-2 py-1 rounded-full text-white text-xs font-medium ${getPriorityColor(task.priority)}">
                             ${task.priority}
                         </span>
                     </div>
                 `).join('');
             } else {
-                document.getElementById('selected-date-tasks').innerHTML = 
-                    '<p class="text-gray-500 text-center py-4">No tasks for this date</p>';
+                document.getElementById('selected-date-tasks').innerHTML =
+                    '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No tasks for this date</p>';
             }
-            
+
             document.getElementById('selected-date-info').classList.remove('hidden');
-            
+
             // Update the to-do list to show selected date's tasks
             updateToDoListForDate(dateStr);
-            
+
             // Scroll to calendar
             document.getElementById('selected-date-info').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
+
             renderCalendar();
         }
 
         function updateToDoListForDate(dateStr) {
             const date = new Date(dateStr);
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
             const dateDisplay = `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
-            
+
             const dayTasks = tasks.filter(t => t.date === dateStr);
             const tasksList = document.getElementById('tasks-list');
-            
+
             // Add a header showing the selected date
             const header = `
-                <div class="bg-blue-100 border-l-4 border-blue-500 p-4 mb-4 rounded">
+                <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 p-4 mb-4 rounded">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="font-bold text-blue-800">📅 Viewing: ${dateDisplay}</p>
-                            <p class="text-sm text-blue-600">${dayTasks.length} task(s) for this date</p>
+                            <p class="font-bold text-blue-800 dark:text-blue-200">📅 Viewing: ${dateDisplay}</p>
+                            <p class="text-sm text-blue-600 dark:text-blue-300">${dayTasks.length} task(s) for this date</p>
                         </div>
-                        <button onclick="clearDateFilter()" class="text-blue-600 hover:text-blue-800 underline text-sm">
+                        <button onclick="clearDateFilter()" class="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 underline text-sm">
                             Show All Tasks
                         </button>
                     </div>
                 </div>
             `;
-            
+
             tasksList.innerHTML = header + (dayTasks.length > 0 ? dayTasks.map(task => `
-                <div class="flex items-center justify-between p-4 border-2 rounded-xl hover:bg-gray-50 transition ${task.completed ? 'bg-gray-50 opacity-75' : 'bg-white'}">
+                <div class="flex items-center justify-between p-4 border-2 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition ${task.completed ? 'bg-gray-50 dark:bg-gray-700 opacity-75' : 'bg-white dark:bg-gray-800'}">
                     <div class="flex items-center gap-4 flex-1">
                         <input 
                             type="checkbox" 
@@ -1871,7 +2172,7 @@ Be brief and actionable.`
                             onchange="toggleTask(${task.id})"
                             class="w-6 h-6 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
                         >
-                        <span class="flex-1 text-lg ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}">${task.name}</span>
+                        <span class="flex-1 text-lg ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-white'}">${task.name}</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="px-3 py-1 rounded-full text-white text-sm font-medium ${getPriorityColor(task.priority)}">
@@ -1909,7 +2210,7 @@ Be brief and actionable.`
             const completed = dayTasks.filter(t => t.completed).length;
             const total = dayTasks.length;
             const pending = total - completed;
-            
+
             const completedPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
             const pendingPercent = total > 0 ? Math.round((pending / total) * 100) : 0;
 
@@ -1919,17 +2220,17 @@ Be brief and actionable.`
 
             // Update stats for specific date
             document.getElementById('stats').innerHTML = `
-                <div class="bg-cyan-50 p-4 rounded-lg">
-                    <div class="text-3xl font-bold text-cyan-600">${completedPercent}%</div>
-                    <div class="text-sm text-gray-600">Completed</div>
+                <div class="bg-cyan-50 dark:bg-cyan-900 p-4 rounded-lg">
+                    <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-300">${completedPercent}%</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Completed</div>
                 </div>
-                <div class="bg-red-50 p-4 rounded-lg">
-                    <div class="text-3xl font-bold text-red-600">${total}</div>
-                    <div class="text-sm text-gray-600">Total Tasks</div>
+                <div class="bg-red-50 dark:bg-red-900 p-4 rounded-lg">
+                    <div class="text-3xl font-bold text-red-600 dark:text-red-300">${total}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Total Tasks</div>
                 </div>
-                <div class="bg-yellow-50 p-4 rounded-lg">
-                    <div class="text-3xl font-bold text-yellow-600">${pending}</div>
-                    <div class="text-sm text-gray-600">Pending</div>
+                <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg">
+                    <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-300">${pending}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Pending</div>
                 </div>
             `;
 
@@ -1973,7 +2274,7 @@ Be brief and actionable.`
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return context.label + ': ' + context.parsed + '%';
                             }
                         }
@@ -2063,9 +2364,9 @@ Be brief and actionable.`
             currentView = view;
             selectedDate = null; // Clear date filter when switching views
             document.getElementById('selected-date-info').classList.add('hidden');
-            document.getElementById('btn-today').className = 'px-4 py-2 rounded-lg font-medium ' + (view === 'today' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700');
-            document.getElementById('btn-week').className = 'px-4 py-2 rounded-lg font-medium ' + (view === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700');
-            document.getElementById('btn-month').className = 'px-4 py-2 rounded-lg font-medium ' + (view === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700');
+            document.getElementById('btn-today').className = 'px-4 py-2 rounded-lg font-medium ' + (view === 'today' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200');
+            document.getElementById('btn-week').className = 'px-4 py-2 rounded-lg font-medium ' + (view === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200');
+            document.getElementById('btn-month').className = 'px-4 py-2 rounded-lg font-medium ' + (view === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200');
             render();
         }
 
@@ -2073,7 +2374,7 @@ Be brief and actionable.`
             const now = new Date();
             const cutoff = new Date();
             const todayStr = now.toISOString().split('T')[0];
-            
+
             if (currentView === 'today') {
                 return tasks.filter(t => t.date === todayStr);
             } else if (currentView === 'week') {
@@ -2096,7 +2397,7 @@ Be brief and actionable.`
             const completed = filtered.filter(t => t.completed).length;
             const total = filtered.length;
             const pending = total - completed;
-            
+
             const completedPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
             const pendingPercent = total > 0 ? Math.round((pending / total) * 100) : 0;
 
@@ -2106,17 +2407,17 @@ Be brief and actionable.`
 
             // Update stats
             document.getElementById('stats').innerHTML = `
-                <div class="bg-cyan-50 p-4 rounded-lg">
-                    <div class="text-3xl font-bold text-cyan-600">${completedPercent}%</div>
-                    <div class="text-sm text-gray-600">Completed</div>
+                <div class="bg-cyan-50 dark:bg-cyan-900 p-4 rounded-lg">
+                    <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-300">${completedPercent}%</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Completed</div>
                 </div>
-                <div class="bg-red-50 p-4 rounded-lg">
-                    <div class="text-3xl font-bold text-red-600">${total}</div>
-                    <div class="text-sm text-gray-600">Total Tasks</div>
+                <div class="bg-red-50 dark:bg-red-900 p-4 rounded-lg">
+                    <div class="text-3xl font-bold text-red-600 dark:text-red-300">${total}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Total Tasks</div>
                 </div>
-                <div class="bg-yellow-50 p-4 rounded-lg">
-                    <div class="text-3xl font-bold text-yellow-600">${pending}</div>
-                    <div class="text-sm text-gray-600">Pending</div>
+                <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg">
+                    <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-300">${pending}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">Pending</div>
                 </div>
             `;
 
@@ -2167,7 +2468,7 @@ Be brief and actionable.`
                 console.error('AI button not found!');
                 return;
             }
-            
+
             btn.disabled = true;
             btn.textContent = 'Analyzing...';
 
@@ -2189,7 +2490,7 @@ Be brief and actionable.`
             // Generate smart feedback (always works, no API needed!)
             const completionRate = summary.completionRate;
             let feedback = `📊 ${currentView.toUpperCase()} PROGRESS ANALYSIS\n\n`;
-            
+
             if (summary.totalTasks === 0) {
                 feedback = `📝 No tasks yet for ${currentView}!\n\n`;
                 feedback += `💡 Get started by clicking the "+ Add Task" button above.\n\n`;
@@ -2230,17 +2531,17 @@ Be brief and actionable.`
                 feedback += `   4. Use 🎯 Focus Mode on task #1\n\n`;
                 feedback += `💪 Remember: A short, completed list beats a long, pending one. You've got this!`;
             }
-            
+
             // Add high priority analysis
             if (summary.highPriorityTasks > 0) {
                 const highRate = Math.round((summary.highPriorityCompleted / summary.highPriorityTasks) * 100);
                 feedback += `\n\n🎯 HIGH PRIORITY STATUS: ${highRate}% complete (${summary.highPriorityCompleted}/${summary.highPriorityTasks})`;
-                
+
                 if (highRate < 50) {
                     feedback += `\n⚠️ Alert: Focus on high-priority tasks first! They're your biggest impact items.`;
                 }
             }
-            
+
             const feedbackEl = document.getElementById('ai-feedback');
             if (feedbackEl) {
                 feedbackEl.textContent = feedback;
@@ -2256,16 +2557,16 @@ Be brief and actionable.`
         function render() {
             const filtered = getFilteredTasks();
             const available = getAvailableTasksWithDependencies(filtered);
-            
+
             // Update view indicator
             const viewNames = { today: "Today's Tasks", week: "This Week", month: "This Month" };
             document.getElementById('view-indicator').textContent = selectedDate ? '' : `(${viewNames[currentView]})`;
-            
+
             const tasksList = document.getElementById('tasks-list');
             tasksList.innerHTML = available.length > 0 ? available.map(task => {
                 const area = task.areaId ? areas.find(a => a.id === task.areaId) : null;
                 return `
-                <div class="flex items-center justify-between p-4 border-2 rounded-xl hover:bg-gray-50 transition ${task.completed ? 'bg-gray-50 opacity-75' : 'bg-white'}">
+                <div class="flex items-center justify-between p-4 border-2 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition ${task.completed ? 'bg-gray-50 dark:bg-gray-700 opacity-75' : 'bg-white dark:bg-gray-800'}">
                     <div class="flex items-center gap-4 flex-1">
                         <input 
                             type="checkbox" 
@@ -2274,14 +2575,14 @@ Be brief and actionable.`
                             class="w-6 h-6 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
                         >
                         <div class="flex-1">
-                            <span class="text-lg ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}">${task.name}</span>
+                            <span class="text-lg ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-white'}">${task.name}</span>
                             ${area ? `
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full" style="background: ${area.color}22; color: ${area.color}">
                                         <span class="w-2 h-2 rounded-full" style="background: ${area.color}"></span>
                                         ${area.name}
                                     </span>
-                                    ${task.subsection ? `<span class="text-xs text-gray-500">• ${task.subsection}</span>` : ''}
+                                    ${task.subsection ? `<span class="text-xs text-gray-500 dark:text-gray-400">• ${task.subsection}</span>` : ''}
                                 </div>
                             ` : ''}
                         </div>
@@ -2298,8 +2599,8 @@ Be brief and actionable.`
                     </div>
                 </div>
             `}).join('') : `
-                <div class="text-center py-12 text-gray-500">
-                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
                     <p class="text-lg">No tasks for ${currentView}</p>
@@ -2311,8 +2612,8 @@ Be brief and actionable.`
             const blockedCount = filtered.length - available.length;
             if (blockedCount > 0) {
                 tasksList.innerHTML = `
-                    <div class="mb-4 p-3 bg-gray-100 border-l-4 border-gray-400 rounded">
-                        <p class="text-sm text-gray-700">🔒 ${blockedCount} task(s) hidden (waiting for prerequisites to complete)</p>
+                    <div class="mb-4 p-3 bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-400 rounded">
+                        <p class="text-sm text-gray-700 dark:text-gray-200">🔒 ${blockedCount} task(s) hidden (waiting for prerequisites to complete)</p>
                     </div>
                 ` + tasksList.innerHTML;
             }
@@ -2340,12 +2641,12 @@ Be brief and actionable.`
 
         // PWA - Install Prompt (FIXED!)
         let deferredPrompt = null;
-        
+
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('Install prompt triggered!');
             e.preventDefault();
             deferredPrompt = e;
-            
+
             // Show install banner
             const installBanner = document.createElement('div');
             installBanner.id = 'install-banner';
@@ -2368,14 +2669,14 @@ Be brief and actionable.`
                 </div>
             `;
             document.body.appendChild(installBanner);
-            
+
             // Add click listeners AFTER adding to DOM
             setTimeout(() => {
                 const installBtn = document.getElementById('pwa-install-btn');
                 const dismissBtn = document.getElementById('pwa-dismiss-btn');
-                
+
                 if (installBtn) {
-                    installBtn.addEventListener('click', function() {
+                    installBtn.addEventListener('click', function () {
                         console.log('Install button clicked!');
                         if (deferredPrompt) {
                             deferredPrompt.prompt();
@@ -2391,9 +2692,9 @@ Be brief and actionable.`
                         }
                     });
                 }
-                
+
                 if (dismissBtn) {
-                    dismissBtn.addEventListener('click', function() {
+                    dismissBtn.addEventListener('click', function () {
                         console.log('Dismiss button clicked!');
                         const banner = document.getElementById('install-banner');
                         if (banner) banner.remove();
@@ -2409,4 +2710,5 @@ Be brief and actionable.`
         });
     </script>
 </body>
+
 </html>
